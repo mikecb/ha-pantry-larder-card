@@ -18,7 +18,7 @@
  * Quantity is per item, not per location: Simple Inventory keeps one total
  * even when an item is stored in several places.
  */
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 
 // Sizes are in inches. Each part is one Simple Inventory location name.
 const KINDS = {
@@ -406,10 +406,10 @@ function appSVG(app, counts, highlight, { mini = false } = {}) {
       out += `<rect x="${g * 2 + doorW}" y="${g}" width="${doorW}" height="${topH}" rx="${mini ? 1.5 : 3}" class="${cls(on)}"/>`;
       out += `<rect x="${g}" y="${g * 2 + topH}" width="${W}" height="${H - topH - g}" rx="${mini ? 1.5 : 3}" class="${cls(part(fz).on)}"/>`;
       if (!mini)
-        out += `<line x1="${g + doorW - 6}" y1="${g + topH * 0.35}" x2="${g + doorW - 6}" y2="${g + topH * 0.7}" class="handle"/>
-          <line x1="${g * 2 + doorW + 6}" y1="${g + topH * 0.35}" x2="${g * 2 + doorW + 6}" y2="${g + topH * 0.7}" class="handle"/>
+        out += `<line x1="${g + doorW - 6}" y1="${g + topH * 0.08}" x2="${g + doorW - 6}" y2="${g + topH * 0.3}" class="handle"/>
+          <line x1="${g * 2 + doorW + 6}" y1="${g + topH * 0.08}" x2="${g * 2 + doorW + 6}" y2="${g + topH * 0.3}" class="handle"/>
           <line x1="${g + W * 0.3}" y1="${g * 2 + topH + 10}" x2="${g + W * 0.7}" y2="${g * 2 + topH + 10}" class="handle"/>`;
-      out += label(g + W / 2, g + topH / 2, fr, { big: true });
+      out += label(g + W / 2, g + topH * 0.62, fr, { big: true });
       out += label(g + W / 2, g * 2 + topH + (H - topH) / 2, fz);
       return out + `</svg>`;
     }

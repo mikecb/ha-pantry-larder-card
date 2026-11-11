@@ -7,6 +7,16 @@ A Home Assistant Lovelace card that shows a [Simple Inventory](https://github.co
 - **Item dialog:** tap an item to see its amount with plus and minus buttons, and every place it's stored, highlighted on the diagrams.
 - Follows your Home Assistant theme in light and dark mode.
 
+![Larder list, grouped by category](docs/larder-list.png)
+
+![By location, with each storage place drawn to scale](docs/by-location.png)
+
+| Item dialog | Dark theme |
+| --- | --- |
+| ![Item dialog with amount and locations](docs/item-dialog.png) | ![By location in a dark theme](docs/by-location-dark.png) |
+
+Screenshots use made-up demo data.
+
 ## Requirements
 
 - Home Assistant 2024.8 or later.
@@ -93,4 +103,4 @@ appliances:
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The bundled Cormorant Garamond font is © the Cormorant Project Authors and licensed under the [SIL Open Font License 1.1](OFL.txt).
+MIT, see [LICENSE](LICENSE) and [NOTICE](NOTICE). The bundled Cormorant Garamond font is © the Cormorant Project Authors and licensed under the [SIL Open Font License 1.1](OFL.txt).
