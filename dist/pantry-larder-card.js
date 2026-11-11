@@ -1,62 +1,62 @@
 /*
- * pantry-larder-card: the Simple Inventory pantry as a printed larder list,
- * in the same style as cellar-wine-list-card.
+ * pantry-larder-card: a Simple Inventory pantry as a printed larder list,
+ * with storage diagrams drawn to scale.
+ * https://github.com/mikecb/ha-pantry-larder-card
  *
  * type: custom:pantry-larder-card
- * title: The Pantry               # optional
- * inventory: sensor.pantry_inventory  # Simple Inventory sensor (gives inventory_id)
- * view: items                     # items | location (initial tab)
- * appliances: [...]               # optional, overrides DEFAULT_APPLIANCES
+ * inventory: sensor.pantry_inventory   # a Simple Inventory "<name> inventory" sensor
+ * title: The Pantry                    # optional
+ * view: items                          # items | location (initial tab)
+ * appliances:                          # optional; without it every location is a plain block
+ *   - name: Kitchen pantry
+ *     area: Kitchen
+ *     kind: run                        # run | frenchdoor | sidebyside | upright | room
+ *     h: 78                            # inches
+ *     parts:
+ *       - { loc: Kitchen Pantry 1, label: "1", w: 24 }
  *
  * Quantity is per item, not per location: Simple Inventory keeps one total
  * even when an item is stored in several places.
  */
-const VERSION = "0.1.3";
+const VERSION = "0.2.0";
 
 // Sizes are in inches. Each part is one Simple Inventory location name.
-const DEFAULT_APPLIANCES = [
-  {
-    id: "kitchen-pantry",
-    area: "Kitchen",
-    name: "Kitchen pantry",
-    kind: "run",
-    h: 78,
-    parts: [
-      { loc: "Kitchen Pantry 1", label: "1", w: 24 },
-      { loc: "Kitchen Pantry 2", label: "2", w: 24 },
-      { loc: "Kitchen Pantry 3", label: "3", w: 24 },
-      { loc: "Kitchen Pantry 4", label: "4", w: 12 },
-      { loc: "Kitchen Pantry 5", label: "5", w: 12 },
-      { loc: "Kitchen Pantry 6", label: "6", w: 12 },
-    ],
-  },
-  {
-    id: "kitchen-fridge",
-    area: "Kitchen",
-    name: "Kitchen fridge",
-    kind: "frenchdoor",
-    w: 36,
-    h: 70,
-    parts: [
-      { loc: "Kitchen Fridge", label: "Fridge" },
-      { loc: "Kitchen Freezer", label: "Freezer" },
-    ],
-  },
-  { id: "basement-pantry", area: "Basement", name: "Basement pantry", kind: "room", parts: [{ loc: "Basement Pantry", label: "Pantry" }] },
-  {
-    id: "basement-fridge",
-    area: "Basement",
-    name: "Basement fridge",
-    kind: "sidebyside",
-    w: 36,
-    h: 70,
-    parts: [
-      { loc: "Basement Fridge Freezer", label: "Freezer" },
-      { loc: "Basement Fridge", label: "Fridge" },
-    ],
-  },
-  { id: "basement-freezer", area: "Basement", name: "Basement freezer", kind: "upright", w: 30, h: 70, parts: [{ loc: "Basement Freezer", label: "Freezer" }] },
-];
+const KINDS = {
+  run: { h: 78, partW: 24, parts: [1, 99] },
+  frenchdoor: { w: 36, h: 70, parts: [2, 2] }, // [fridge doors, freezer drawer]
+  sidebyside: { w: 36, h: 70, parts: [2, 2] }, // [freezer side, fridge side]
+  upright: { w: 30, h: 70, parts: [1, 1] },
+  room: { parts: [1, 1] },
+};
+
+// Fill in defaults and check the shape, so a typo shows HA's error card instead of a blank one.
+function normalizeAppliances(list) {
+  if (list == null) return [];
+  if (!Array.isArray(list)) throw new Error("pantry-larder-card: 'appliances' must be a list");
+  return list.map((a, i) => {
+    const where = `pantry-larder-card: appliances[${i}]`;
+    if (!a || typeof a !== "object") throw new Error(`${where} must be an object`);
+    const kind = a.kind || "room";
+    const spec = KINDS[kind];
+    if (!spec) throw new Error(`${where}: unknown kind '${kind}' (use ${Object.keys(KINDS).join(", ")})`);
+    if (!Array.isArray(a.parts) || !a.parts.length) throw new Error(`${where} needs a 'parts' list`);
+    const [min, max] = spec.parts;
+    if (a.parts.length < min || a.parts.length > max)
+      throw new Error(`${where}: kind '${kind}' takes ${min === max ? min : `${min} to ${max}`} part${max > 1 ? "s" : ""}`);
+    const parts = a.parts.map((p, j) => {
+      if (!p || !p.loc) throw new Error(`${where}.parts[${j}] needs 'loc', the Simple Inventory location name`);
+      return { loc: String(p.loc), label: String(p.label ?? p.loc), w: Number(p.w) || spec.partW || 24 };
+    });
+    return {
+      name: String(a.name || parts[0].loc),
+      area: String(a.area || "Storage"),
+      kind,
+      w: Number(a.w) || spec.w,
+      h: Number(a.h) || spec.h,
+      parts,
+    };
+  });
+}
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -98,7 +98,7 @@ class PantryLarderCard extends HTMLElement {
 
   setConfig(config) {
     this._config = { title: "The Pantry", inventory: "sensor.pantry_inventory", view: "items", ...config };
-    this._apps = this._config.appliances || DEFAULT_APPLIANCES;
+    this._apps = normalizeAppliances(this._config.appliances);
     this._view = this._view || this._config.view;
     this._query = this._query || "";
     this._items = this._items || null;
@@ -282,7 +282,8 @@ class PantryLarderCard extends HTMLElement {
   _locationHTML(items) {
     const known = new Set(this._knownLocs());
     const extra = [...new Set(items.flatMap(locsOf))].filter((l) => !known.has(l));
-    const apps = [...this._apps, ...extra.map((loc) => ({ id: `x-${loc}`, area: "Elsewhere", name: loc, kind: "room", parts: [{ loc, label: loc }] }))];
+    const extraArea = this._apps.length ? "Elsewhere" : "Storage";
+    const apps = [...this._apps, ...extra.map((loc) => ({ area: extraArea, name: loc, kind: "room", parts: [{ loc, label: loc }] }))];
     let html = "";
     for (const area of [...new Set(apps.map((a) => a.area))]) {
       html += `<div class="area"><span>${esc(area)}</span></div>`;
@@ -432,7 +433,7 @@ function appSVG(app, counts, highlight, { mini = false } = {}) {
     return out + `</svg>`;
   }
 
-  // room: a dashed outline, the same as the cellar's free-standing areas
+  // room: a dashed outline for places without a fixed shape
   const [p] = app.parts;
   const w = mini ? 70 : 220;
   const h = mini ? 44 : 110;
@@ -543,10 +544,11 @@ class PantryItemDialog extends HTMLElement {
 }
 
 function ensureFont() {
-  // Shared with the cellar card: the same self-hosted Cormorant Garamond.
-  if (window.__cellarFontLoading) return;
-  window.__cellarFontLoading = true;
-  import(new URL("../cellar/cellar-fonts.js", import.meta.url).href)
+  // Bundled Cormorant Garamond (SIL OFL), shipped next to this file. Skip it if another card already added the face.
+  if (window.__pantryFontLoading) return;
+  window.__pantryFontLoading = true;
+  if ([...document.fonts].some((f) => f.family.replace(/["']/g, "") === "Cormorant Garamond")) return;
+  import(new URL("./pantry-fonts.js", import.meta.url).href)
     .then((m) => {
       const buf = (b64) => Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)).buffer;
       for (const [data, style] of [[m.NORMAL, "normal"], [m.ITALIC, "italic"]]) {
@@ -688,5 +690,6 @@ window.customCards.push({
   type: "pantry-larder-card",
   name: "Pantry larder list",
   description: "Simple Inventory pantry as a printed larder list, with storage diagrams and quantity controls.",
+  documentationURL: "https://github.com/mikecb/ha-pantry-larder-card",
 });
 console.info(`%c PANTRY-LARDER-CARD %c ${VERSION} `, "background:#5f6b22;color:#fff", "");
