@@ -96,6 +96,14 @@ appliances:
       - { loc: Basement Pantry }
 ```
 
+## Using it with an AI agent
+
+The card only draws your inventory; an agent can keep it up to date. Give your agent
+[skills/pantry-larder/SKILL.md](skills/pantry-larder/SKILL.md) along with Home Assistant tools
+that can call actions. It explains how to read the inventory, answer "do we have" and "where is",
+list what's low or expiring, record what was used or bought, and change the storage layout. The
+agent records only what you tell it, and asks before guessing.
+
 ## Notes
 
 - Simple Inventory keeps one amount per item, even when an item is stored in more than one place. The card shows that total, and the plus and minus buttons change it.
