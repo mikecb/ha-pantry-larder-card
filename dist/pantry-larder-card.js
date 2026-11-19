@@ -18,7 +18,7 @@
  * Quantity is per item, not per location: Simple Inventory keeps one total
  * even when an item is stored in several places.
  */
-const VERSION = "0.2.1";
+const VERSION = "0.3.0";
 
 // Sizes are in inches. Each part is one Simple Inventory location name.
 const KINDS = {
@@ -561,16 +561,16 @@ function ensureFont() {
 }
 
 const SHARED_CSS = `
-  --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, "Noto Serif", serif;
+  --serif: var(--pantry-larder-font, "Cormorant Garamond", "Iowan Old Style", Georgia, "Noto Serif", serif);
   --ink: var(--primary-text-color, #2b2416);
   --muted: var(--secondary-text-color, #766b58);
-  --accent: #5f6b22;
-  --accent-soft: rgba(95, 107, 34, 0.13);
-  --warn: #9a4a12;
+  --accent: var(--pantry-larder-accent, #5f6b22);
+  --accent-soft: var(--pantry-larder-accent-soft, rgba(95, 107, 34, 0.13));
+  --warn: var(--pantry-larder-warn, #9a4a12);
   --rule: color-mix(in srgb, var(--ink) 22%, transparent);
   --paper: var(--ha-card-background, var(--card-background-color, #fbf8f2));
 `;
-const SHARED_DARK = `--accent: #c2cf7d; --accent-soft: rgba(194, 207, 125, 0.16); --warn: #f0a46b;`;
+const SHARED_DARK = `--accent: var(--pantry-larder-accent, #c2cf7d); --accent-soft: var(--pantry-larder-accent-soft, rgba(194, 207, 125, 0.16)); --warn: var(--pantry-larder-warn, #f0a46b);`;
 
 const SVG_CSS = `
   .rack .frame { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--rule); }

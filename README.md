@@ -96,6 +96,29 @@ appliances:
       - { loc: Basement Pantry }
 ```
 
+## Theming
+
+The card follows your Home Assistant theme's text and card colours. A theme can also set its serif and accents through these optional variables; without them the card keeps its own olive palette and the bundled Cormorant Garamond.
+
+| Variable | Default (light / dark) | Used for |
+| --- | --- | --- |
+| `pantry-larder-font` | Cormorant Garamond | Every line of the card |
+| `pantry-larder-accent` | `#5f6b22` / `#c2cf7d` | Selected tab, highlighted storage, buttons |
+| `pantry-larder-accent-soft` | olive wash | Highlighted storage and hover backgrounds |
+| `pantry-larder-warn` | `#9a4a12` / `#f0a46b` | Running-low and use-by flags |
+
+Set them in your theme like any other variable, per mode if the theme has `modes`:
+
+```yaml
+My Theme:
+  modes:
+    light:
+      pantry-larder-accent: "#56652a"
+    dark:
+      pantry-larder-font: 'Vollkorn, Georgia, serif'
+      pantry-larder-accent: "#8aab68"
+```
+
 ## Using it with an AI agent
 
 The card only draws your inventory; an agent can keep it up to date. Give your agent
